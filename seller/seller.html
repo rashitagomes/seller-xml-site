@@ -65,7 +65,7 @@
 
     <script>
         // Load XML data and display it in a table
-        fetch('products.xml')
+        fetch("../products.xml")
         .then(response => response.text())
         .then(str => new window.DOMParser().parseFromString(str, "text/xml"))
         .then(data => {

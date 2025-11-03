@@ -63,7 +63,7 @@
     <footer>Connected via Shared XML Database</footer>
 
     <script>
-        fetch('products.xml')
+       fetch("../products.xml")
         .then(response => response.text())
         .then(str => new window.DOMParser().parseFromString(str, "text/xml"))
         .then(data => {
