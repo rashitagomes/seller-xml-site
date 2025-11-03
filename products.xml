@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<products>
+    <product>
+        <id>101</id>
+        <name>Chocolate Cake</name>
+        <price>₹450</price>
+        <availability>Available</availability>
+    </product>
+    <product>
+        <id>102</id>
+        <name>Red Velvet Cake</name>
+        <price>₹600</price>
+        <availability>Out of Stock</availability>
+    </product>
+    <product>
+        <id>103</id>
+        <name>Black Forest Cake</name>
+        <price>₹550</price>
+        <availability>Available</availability>
+    </product>
+</products>
