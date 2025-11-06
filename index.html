@@ -1,73 +1,144 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>XML Database Project – Rashita Gomes</title>
   <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-      color: white;
-      text-align: center;
+    /* ===== Reset and Base ===== */
+    * {
       margin: 0;
-      padding: 50px 0;
+      padding: 0;
+      box-sizing: border-box;
     }
 
-    h1 {
-      font-size: 2.2em;
-      margin-bottom: 10px;
+    body {
+      font-family: "Poppins", sans-serif;
+      background: linear-gradient(145deg, #101820, #1b2735);
+      color: #f1f1f1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 100vh;
+      text-align: center;
+      padding: 40px 20px;
     }
 
-    p {
-      color: #ddd;
-      font-size: 1em;
+    header {
       margin-bottom: 40px;
     }
 
-    .links {
+    h1 {
+      font-size: 2.3em;
+      font-weight: 600;
+      color: #f8f8f8;
+    }
+
+    p {
+      color: #bdbdbd;
+      margin-top: 8px;
+      font-size: 1rem;
+    }
+
+    /* ===== Main Cards ===== */
+    .cards {
       display: flex;
+      flex-wrap: wrap;
       justify-content: center;
       gap: 40px;
-      flex-wrap: wrap;
+      margin-top: 50px;
+      width: 100%;
+      max-width: 900px;
     }
 
-    a {
+    .card {
+      background: #ffffff12;
+      border: 1px solid #ffffff22;
+      border-radius: 16px;
+      padding: 40px 25px;
+      width: 280px;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(6px);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+    }
+
+    .card:hover {
+      background: #1f2a38;
+      transform: translateY(-6px);
+      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.3);
+    }
+
+    .card h2 {
+      font-size: 1.4em;
+      color: #fff;
+      margin-bottom: 12px;
+    }
+
+    .card p {
+      color: #b8c1ca;
+      font-size: 0.95em;
+      margin-bottom: 25px;
+    }
+
+    .card a {
+      display: inline-block;
       text-decoration: none;
+      background: #0078ff;
       color: white;
-      background: #1e90ff;
-      padding: 15px 35px;
-      border-radius: 10px;
-      transition: 0.3s;
+      padding: 12px 28px;
+      border-radius: 8px;
       font-weight: 600;
+      letter-spacing: 0.3px;
+      transition: all 0.3s ease;
     }
 
-    a:hover {
-      background: #00bfff;
+    .card a:hover {
+      background: #0095ff;
       transform: scale(1.05);
     }
 
+    /* ===== Footer ===== */
     footer {
       margin-top: 60px;
       font-size: 0.9em;
       color: #aaa;
     }
+
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 1.8em;
+      }
+      .card {
+        width: 100%;
+        max-width: 320px;
+      }
+    }
   </style>
 </head>
 <body>
+  <header>
+    <h1>XML Database Implementation</h1>
+    <p>By <strong>Rashita Gomes</strong></p>
+    <p>Explore Object Oriented and XML Databases integrated between two sites</p>
+  </header>
 
-  <h1>XML Database Implementation</h1>
-  <p>By <strong>Rashita Gomes</strong></p>
-  <p>Explore the Object Oriented and XML Databases implemented for data sharing between two websites:</p>
+  <main class="cards">
+    <div class="card">
+      <h2>Seller (Admin) Portal</h2>
+      <p>Manage and update products directly in the shared XML database.</p>
+      <a href="seller/seller.html" target="_blank">Go to Seller Site</a>
+    </div>
 
-  <div class="links">
-    <a href="seller/seller.html" target="_blank">Visit Seller Site</a>
-    <a href="buyer/buyer.html" target="_blank">Visit Buyer Site</a>
-  </div>
+    <div class="card">
+      <h2>Buyer Portal</h2>
+      <p>View all products shared by the seller in real-time via XML data.</p>
+      <a href="buyer/buyer.html" target="_blank">Go to Buyer Site</a>
+    </div>
+  </main>
 
   <footer>
     <p>CCA 3 Project – Implementation of Object Oriented and XML Databases</p>
   </footer>
-
 </body>
 </html>

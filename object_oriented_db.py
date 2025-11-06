@@ -24,6 +24,8 @@ s1 = Student(101, "Amit Sharma", "Computer Science")
 s2 = Student(102, "Neha Patil", "Information Technology")
 s3 = Student(103, "Ravi Kumar", "Data Science")
 
+
+
 # Store (serialize) objects in a binary file
 with open("students_database.pkl", "wb") as file:
     pickle.dump([s1, s2, s3], file)
