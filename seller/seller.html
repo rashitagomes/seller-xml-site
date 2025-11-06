@@ -164,113 +164,184 @@
   </div>
 
   <footer>Data synchronized with Buyer Portal (XML simulation)</footer>
+<script>
+  // Ensure localStorage has products XML. If not, try to load the original products.xml from main folder.
+  async function ensureLocalProducts() {
+    if (localStorage.getItem('products')) return;
+    try {
+      const resp = await fetch('../products.xml');
+      if (!resp.ok) throw new Error('XML fetch failed');
+      const text = await resp.text();
+      localStorage.setItem('products', text);
+    } catch (err) {
+      // If fetching fails (e.g. GitHub CORS) create an initial minimal XML so UI still works
+      const fallback = `<?xml version="1.0" encoding="UTF-8"?>
+      <products>
+        <product><id>101</id><name>Chocolate Cake</name><price>₹450</price><availability>Available</availability></product>
+        <product><id>102</id><name>Red Velvet Cake</name><price>₹600</price><availability>Out of Stock</availability></product>
+        <product><id>103</id><name>Black Forest Cake</name><price>₹550</price><availability>Available</availability></product>
+      </products>`;
+      localStorage.setItem('products', fallback);
+    }
+  }
 
-  <script>
-    function loadProducts() {
-      let stored = localStorage.getItem('products');
-      let xmlText;
-      if (!stored) {
-        // initial XML data
-        xmlText = `<?xml version="1.0" encoding="UTF-8"?>
-        <products>
-          <product><id>101</id><name>Chocolate Cake</name><price>₹450</price><availability>Available</availability></product>
-          <product><id>102</id><name>Red Velvet Cake</name><price>₹600</price><availability>Out of Stock</availability></product>
-          <product><id>103</id><name>Black Forest Cake</name><price>₹550</price><availability>Available</availability></product>
-        </products>`;
-        localStorage.setItem('products', xmlText);
-      } else {
-        xmlText = stored;
-      }
+  // Load and render products into the table
+  async function loadProducts() {
+    await ensureLocalProducts();
+    const xmlText = localStorage.getItem('products');
+    const data = new window.DOMParser().parseFromString(xmlText, "text/xml");
+    const products = data.getElementsByTagName("product");
+    const table = document.getElementById("productTable");
 
-      const data = new window.DOMParser().parseFromString(xmlText, "text/xml");
-      const products = data.getElementsByTagName("product");
-      const table = document.getElementById("productTable");
-      table.innerHTML = `
-        <tr><th>ID</th><th>Name</th><th>Price</th><th>Availability</th><th>Action</th></tr>
-      `;
+    table.innerHTML = `
+      <tr><th>ID</th><th>Name</th><th>Price</th><th>Availability</th><th>Action</th></tr>
+    `;
 
-      for (let i = 0; i < products.length; i++) {
-        const row = table.insertRow();
-        const id = products[i].getElementsByTagName("id")[0].textContent;
-        const name = products[i].getElementsByTagName("name")[0].textContent;
-        const price = products[i].getElementsByTagName("price")[0].textContent;
-        const availability = products[i].getElementsByTagName("availability")[0].textContent;
+    for (let i = 0; i < products.length; i++) {
+      const row = table.insertRow();
+      const id = products[i].getElementsByTagName("id")[0].textContent;
+      const name = products[i].getElementsByTagName("name")[0].textContent;
+      const price = products[i].getElementsByTagName("price")[0].textContent;
+      const availability = products[i].getElementsByTagName("availability")[0].textContent;
 
-        row.insertCell(0).innerHTML = id;
-        row.insertCell(1).innerHTML = name;
-        row.insertCell(2).innerHTML = price;
-        row.insertCell(3).innerHTML = availability;
-        row.insertCell(4).innerHTML = `<button class='delete-btn' onclick='deleteProduct("${id}")'>Delete</button>`;
+      row.insertCell(0).innerHTML = id;
+      row.insertCell(1).innerHTML = name;
+      row.insertCell(2).innerHTML = price;
+      row.insertCell(3).innerHTML = availability;
+      row.insertCell(4).innerHTML = `<button class='delete-btn' onclick='deleteProduct("${id}")'>Delete</button>`;
+    }
+  }
+
+  // Add a product (prevents duplicate IDs)
+  async function addProduct() {
+    await ensureLocalProducts();
+
+    const idEl = document.getElementById('id');
+    const nameEl = document.getElementById('name');
+    const priceEl = document.getElementById('price');
+    const availEl = document.getElementById('availability');
+
+    const id = idEl.value.trim();
+    const name = nameEl.value.trim();
+   let price = priceEl.value.trim();
+
+// Automatically add ₹ symbol if not present
+if (price && !price.startsWith("₹")) {
+  price = "₹" + price;
+}
+
+    const availability = availEl.value.trim() || 'Available';
+
+    if (!id || !name || !price) {
+      alert("Please fill all fields (ID, Name, Price).");
+      return;
+    }
+
+    // Load existing XML from localStorage
+    let xmlText = localStorage.getItem('products') || `<?xml version="1.0"?><products></products>`;
+    let xmlDoc = new window.DOMParser().parseFromString(xmlText, "text/xml");
+
+    // Strict duplicate check on <id> values
+    const existingIds = Array.from(xmlDoc.getElementsByTagName("id")).map(el => el.textContent.trim());
+    if (existingIds.includes(id)) {
+      alert(`Product with ID "${id}" already exists. Use a unique ID.`);
+      return;
+    }
+
+    // Create new product element
+    const newProduct = xmlDoc.createElement("product");
+    const idNode = xmlDoc.createElement("id");
+    idNode.textContent = id;
+    const nameNode = xmlDoc.createElement("name");
+    nameNode.textContent = name;
+    const priceNode = xmlDoc.createElement("price");
+    priceNode.textContent = price;
+    const availNode = xmlDoc.createElement("availability");
+    availNode.textContent = availability;
+
+    newProduct.appendChild(idNode);
+    newProduct.appendChild(nameNode);
+    newProduct.appendChild(priceNode);
+    newProduct.appendChild(availNode);
+
+    xmlDoc.documentElement.appendChild(newProduct);
+
+    // Save back to localStorage
+    const serializer = new XMLSerializer();
+    localStorage.setItem('products', serializer.serializeToString(xmlDoc));
+
+    // UI update
+    await loadProducts();
+    alert("Product added successfully!");
+    clearForm();
+
+    // Notify other tabs (storage event doesn't fire in same tab, but setting the same key triggers event in other tabs)
+    // We set again to ensure a different value triggers event: append a tiny timestamp comment
+    const annotated = localStorage.getItem('products') + `\n<!--updated:${Date.now()}-->`;
+    localStorage.setItem('products', annotated);
+    // then restore clean XML (remove our comment)
+    localStorage.setItem('products', serializer.serializeToString(xmlDoc));
+  }
+
+  // Delete product by ID (with confirmation)
+  async function deleteProduct(idToDelete) {
+    if (!confirm(`Delete product ${idToDelete}? This action cannot be undone in this session.`)) return;
+
+    await ensureLocalProducts();
+    let xmlText = localStorage.getItem('products') || `<?xml version="1.0"?><products></products>`;
+    let xmlDoc = new window.DOMParser().parseFromString(xmlText, "text/xml");
+    let products = xmlDoc.getElementsByTagName("product");
+    let removed = false;
+
+    for (let i = products.length - 1; i >= 0; i--) {
+      const idNode = products[i].getElementsByTagName("id")[0];
+      if (idNode && idNode.textContent.trim() === idToDelete) {
+        products[i].parentNode.removeChild(products[i]);
+        removed = true;
+        break;
       }
     }
 
-    function addProduct() {
-      let id = document.getElementById('id').value.trim();
-      let name = document.getElementById('name').value.trim();
-      let price = document.getElementById('price').value.trim();
-      let availability = document.getElementById('availability').value.trim();
+    if (!removed) {
+      alert("Product not found.");
+      return;
+    }
 
-      if (!id || !name || !price) {
-        alert("Please fill all fields!");
-        return;
-      }
+    const serializer = new XMLSerializer();
+    localStorage.setItem('products', serializer.serializeToString(xmlDoc));
+    await loadProducts();
+    alert(`Product ${idToDelete} deleted successfully.`);
 
-      let xmlText = localStorage.getItem('products');
-      let xmlDoc = new window.DOMParser().parseFromString(xmlText, "text/xml");
+    // Notify other tabs (small trick to trigger storage event in other tabs)
+    localStorage.setItem('products:lastUpdate', String(Date.now()));
+  }
 
-      // Check for duplicate ID
-      const existing = Array.from(xmlDoc.getElementsByTagName("id"))
-                            .some(el => el.textContent === id);
-      if (existing) {
-        alert("Product with this ID already exists!");
-        return;
-      }
+  function clearForm() {
+    document.getElementById('id').value = '';
+    document.getElementById('name').value = '';
+    document.getElementById('price').value = '';
+    document.getElementById('availability').value = 'Available';
+  }
 
-      let newProduct = xmlDoc.createElement("product");
-      newProduct.innerHTML = `
-        <id>${id}</id>
-        <name>${name}</name>
-        <price>${price}</price>
-        <availability>${availability}</availability>
-      `;
-      xmlDoc.documentElement.appendChild(newProduct);
+  // Keep initial load
+  loadProducts();
 
-      let serializer = new XMLSerializer();
-      localStorage.setItem('products', serializer.serializeToString(xmlDoc));
 
+  window.addEventListener('storage', (e) => {
+    if (e.key === 'products' || e.key === 'products:lastUpdate') {
       loadProducts();
-      alert("Product added successfully!");
-      clearForm();
     }
+  });
+  
+  document.getElementById("price").addEventListener("blur", () => {
+  const priceInput = document.getElementById("price");
+  if (priceInput.value && !priceInput.value.startsWith("₹")) {
+    priceInput.value = "₹" + priceInput.value;
+  }
+});
 
-    function deleteProduct(idToDelete) {
-      let xmlText = localStorage.getItem('products');
-      let xmlDoc = new window.DOMParser().parseFromString(xmlText, "text/xml");
-      let products = xmlDoc.getElementsByTagName("product");
+  
+</script>
 
-      for (let i = 0; i < products.length; i++) {
-        let id = products[i].getElementsByTagName("id")[0].textContent;
-        if (id === idToDelete) {
-          products[i].parentNode.removeChild(products[i]);
-          break;
-        }
-      }
-
-      let serializer = new XMLSerializer();
-      localStorage.setItem('products', serializer.serializeToString(xmlDoc));
-
-      loadProducts();
-      alert(`Product ${idToDelete} deleted successfully!`);
-    }
-
-    function clearForm() {
-      document.getElementById('id').value = '';
-      document.getElementById('name').value = '';
-      document.getElementById('price').value = '';
-      document.getElementById('availability').value = 'Available';
-    }
-
-    loadProducts();
-  </script>
 </body>
 </html>
